@@ -66,10 +66,10 @@ public enum DiskStorage {
                     create: true)
             }
 
-            let cacheName = "com.onevcat.Kingfisher.ImageCache.\(config.name)"
-            directoryURL = config.cachePathBlock(url, cacheName)
+            directoryURL = config.cachePathBlock(url, config.name)
 
-            metaChangingQueue = DispatchQueue(label: cacheName)
+            let cacheQueueName = "com.onevcat.Kingfisher.ImageCache.\(config.name)"
+            metaChangingQueue = DispatchQueue(label: cacheQueueName)
 
             try prepareDirectory()
         }
