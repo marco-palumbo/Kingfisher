@@ -213,7 +213,7 @@ open class ImageCache {
     ///                   You should not use the same `name` for different caches, otherwise, the disk storage would
     ///                   be conflicting to each other. The `name` should not be an empty string.
     public convenience init(name: String) {
-        try! self.init(name: name, cacheDirectoryURL: nil, diskCachePathClosure: nil)
+        try! self.init(name: name, cacheDirectoryURL: nil, diskStorageConfig: nil)
     }
 
     /// Creates an `ImageCache` with a given `name`, cache directory `path`
@@ -233,7 +233,7 @@ open class ImageCache {
     public convenience init(
         name: String,
         cacheDirectoryURL: URL?,
-        diskCachePathClosure: DiskCachePathClosure? = nil) throws
+        diskStorageConfig: DiskStorage.Config? = nil) throws
     {
         if name.isEmpty {
             fatalError("[Kingfisher] You should specify a name for the cache. A cache with empty name is not permitted.")
@@ -244,16 +244,19 @@ open class ImageCache {
         let memoryStorage = MemoryStorage.Backend<KFCrossPlatformImage>(config:
             .init(totalCostLimit: (costLimit > Int.max) ? Int.max : Int(costLimit)))
 
-        var diskConfig = DiskStorage.Config(
-            name: name,
-            sizeLimit: 0,
-            directory: cacheDirectoryURL
-        )
-        if let closure = diskCachePathClosure {
-            diskConfig.cachePathBlock = closure
+        let diskConfig: DiskStorage.Config
+
+        if let config = diskStorageConfig {
+            diskConfig = config
+        } else {
+            diskConfig = DiskStorage.Config(
+                name: name,
+                sizeLimit: 0,
+                directory: cacheDirectoryURL
+            )
         }
+
         let diskStorage = try DiskStorage.Backend<Data>(config: diskConfig)
-        diskConfig.cachePathBlock = nil
 
         self.init(memoryStorage: memoryStorage, diskStorage: diskStorage)
     }
@@ -831,9 +834,9 @@ extension ImageCache {
     public convenience init(
         name: String,
         path: String?,
-        diskCachePathClosure: DiskCachePathClosure? = nil) throws
+        diskStorageConfig: DiskStorage.Config? = nil) throws
     {
         let directoryURL = path.flatMap { URL(string: $0) }
-        try self.init(name: name, cacheDirectoryURL: directoryURL, diskCachePathClosure: diskCachePathClosure)
+        try self.init(name: name, cacheDirectoryURL: directoryURL, diskStorageConfig: diskStorageConfig)
     }
 }
